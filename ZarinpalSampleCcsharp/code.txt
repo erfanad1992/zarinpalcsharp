@@ -1,0 +1,170 @@
+﻿ try
+            {
+
+                var mobile = new Dictionary<string, string> {
+                {  "mobile","09121111111" }
+            };
+
+                var email = new Dictionary<string, string> {
+
+                {
+                    "email" , "zarinpal@test.com"
+                }
+            };
+
+                var metadata = new Dictionary<Dictionary<string, string>, Dictionary<string, string>>
+                { };
+                metadata.Add(mobile, email);
+
+                var _values = new Dictionary<string, dynamic>
+                {
+                    { "merchant_id", "424baadf-ea4c-4744-b29e-5eb62a855821" }, //Change This To work, some thing like this : xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    { "amount", "10000" }, //Toman
+                    { "callback_url", "http://localhost:5000/Home/VerifyPayment" },
+                    {  "description", "افزایش اعتبار کاربر شماره ۱۱۳۴۶۲۹" },
+                   // { "Mobile", "CUSTOMER-MOBLIE-NUMBER" }, //Mobile number will be shown in the transactions list of the wallet as a separate field.
+                    { "metadata", metadata }
+                };
+
+              
+               HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.zarinpal.com/pg/v4/payment/request.json");
+                
+                request.Method = "POST";
+             
+                var _paymentRequestJsonValue = JsonConvert.SerializeObject(_values);
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(_paymentRequestJsonValue);
+              
+                request.ContentType = "application/json; charset=utf-8";
+           
+                request.ContentLength = byteArray.Length;
+              
+                Stream dataStream = request.GetRequestStream();
+           
+                dataStream.Write(byteArray, 0, byteArray.Length);
+             
+                dataStream.Close();
+              
+                WebResponse response = request.GetResponse();
+               
+                MessageBox.Show(((HttpWebResponse)response).StatusDescription);
+       
+                dataStream = response.GetResponseStream();
+            
+                StreamReader reader = new StreamReader(dataStream);
+         
+                string responseFromServer = reader.ReadToEnd();
+        
+                //MessageBox.Show(responseFromServer);
+                lblrequest.Text = responseFromServer;
+               // Console.WriteLine(responseFromServer);
+                //  var forecast = JsonSerializer.Deserialize<Forecast>(json, options);
+                ZarinPalRequestResponseModel zarinPalResponseModel =
+
+                JsonConvert.DeserializeObject<ZarinPalRequestResponseModel>(responseFromServer);
+
+               // dynamic stuff = JsonConvert.DeserializeObject(responseFromServer);
+                dynamic stuff = JsonConvert.DeserializeObject(responseFromServer);
+                //return jsonString.Wsords.ToObject<string[]>();
+                string authority;
+                //string[] errors = stuff.errors.ToObject<string[]>();
+                // JavaScriptSerializer js = new JavaScriptSerializer();
+                //  string[] errors = stuff.errors.ToObject<string[]>();
+               // string datastuff = stuff;
+                string json = @"{
+
+""data"": {
+    ""code"": 100,
+    ""message"": ""Success"",
+    ""authority"": ""A00000000000000000000000000236143913"",
+    ""fee_type"": ""Merchant"",
+    ""fee"": 100
+  },
+  ""errors"": []
+
+}";
+
+                //  Newtonsoft.Json.Linq.JArray a = Newtonsoft.Json.Linq.JArray.Parse(stuff);
+                //  //data = a["errors"];
+                //  Newtonsoft.Json.Linq.JObject obj = Newtonsoft.Json.Linq.JObject.Parse(stuff);
+                //  var jarr = obj["error"].Value<Newtonsoft.Json.Linq.JArray>();
+
+                //Newtonsoft.Json.Linq.JObject o = Newtonsoft.Json.Linq.JObject.Parse(stuff.errors);
+
+
+                //string name = (string)o[stuff.errors];
+
+                Newtonsoft.Json.Linq.JObject jo = Newtonsoft.Json.Linq.JObject.Parse(responseFromServer);
+                string errorscode = jo["errors"].ToString();
+
+                Newtonsoft.Json.Linq.JObject jodata = Newtonsoft.Json.Linq.JObject.Parse(responseFromServer);
+                string dataauth = jodata["data"].ToString();
+
+                //Newtonsoft.Json.Linq.JArray array = new Newtonsoft.Json.Linq.JArray();
+
+                //  Newtonsoft.Json.Linq.JObject sizes = (Newtonsoft.Json.Linq.JObject)array["errors"];
+
+                // string errorcode = (string)sizes[0];
+                //string error = errors;
+
+                //Convert your json to string.I have already done it for you.
+                // string json = stuff;
+                //Add Newtonsoft.Json from Nuget to do this deserialization.
+
+               
+                //   if (errors.Equals("[]"))
+                // {
+                //     string error = stuff.errors.code;
+                //     lblrequest.Text = "data = " + error;
+                //  }
+                if (dataauth != "[]")
+                {
+
+                    authority = stuff.data.authority;
+                    lblrequest.Text = "data = " + authority;
+                    string gatewayUrl = "https://www.zarinpal.com/pg/StartPay/" + authority;
+                    try
+                    {
+                        System.Diagnostics.Process.Start(gatewayUrl);
+                    }
+                    catch (System.ComponentModel.Win32Exception noBrowser)
+                    {
+                        if (noBrowser.ErrorCode == -2147467259)
+                            MessageBox.Show(noBrowser.Message);
+                    }
+                    catch (System.Exception other)
+                    {
+                        MessageBox.Show(other.Message);
+                    }
+
+                }
+                else {
+
+                    MessageBox.Show("errors" + errorscode);
+
+                }
+                //  string error = stuff.errors.code;
+             
+              //  var authority = parsedJson['data']['authority'];
+                //var parsedJson = json.decode(responseBody);
+                //v/ar errorcode = parsedJson['errors']['code'];
+                //if (zarinPalResponseModel.Status != 100)
+               // {
+                //}
+                //else {
+
+                //}
+                    reader.Close();
+                dataStream.Close();
+
+            
+               
+            
+
+
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show("Wrong request ! " + ex.Message, "Error");
+            }
